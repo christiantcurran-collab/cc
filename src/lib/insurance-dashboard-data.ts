@@ -90,11 +90,17 @@ export type RebalanceAction =
 // ============================================================
 // Constants
 // ============================================================
-const GOVT_TEMPLATES = [
-  "US Treasury 2Y Note", "US Treasury 3Y Note", "US Treasury 5Y Note",
-  "US Treasury 7Y Note", "US Treasury 10Y Note", "US Treasury 20Y Bond",
-  "US Treasury 30Y Bond", "US Treasury TIPS 5Y", "US Treasury TIPS 10Y",
-  "US Treasury FRN 2Y",
+const GOVT_TEMPLATES: Array<{ name: string; maturity: number }> = [
+  { name: "US Treasury 2Y Note", maturity: 2 },
+  { name: "US Treasury 3Y Note", maturity: 3 },
+  { name: "US Treasury 5Y Note", maturity: 5 },
+  { name: "US Treasury 7Y Note", maturity: 7 },
+  { name: "US Treasury 10Y Note", maturity: 10 },
+  { name: "US Treasury 20Y Bond", maturity: 20 },
+  { name: "US Treasury 30Y Bond", maturity: 30 },
+  { name: "US Treasury TIPS 5Y", maturity: 5 },
+  { name: "US Treasury TIPS 10Y", maturity: 10 },
+  { name: "US Treasury FRN 2Y", maturity: 2 },
 ];
 
 const CORP_ISSUERS: { name: string; sector: string; rating: string }[] = [
@@ -167,13 +173,13 @@ export function generateBonds(seed: number = 42): Bond[] {
   // 30 Government bonds
   for (let i = 0; i < 30; i++) {
     const template = GOVT_TEMPLATES[i % GOVT_TEMPLATES.length];
-    const maturity = 2 + Math.floor(rng() * 29);
+    const maturity = template.maturity;
     const coupon = Math.round((0.5 + rng() * 4.5) * 8) / 8;
     const ytm = Math.max(0.25, coupon + (rng() - 0.5) * 0.6);
     const rating = rng() < 0.85 ? "AAA" : "AA+";
 
     bonds.push(createBond({
-      id: id++, issuer: template, sector: "Government",
+      id: id++, issuer: template.name, sector: "Government",
       type: "Government", rating, couponRate: coupon,
       maturityYears: maturity, faceValue: 1000000, yieldToMaturity: ytm,
     }));

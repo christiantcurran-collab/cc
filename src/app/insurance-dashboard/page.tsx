@@ -51,6 +51,13 @@ const REBALANCE_ACTIONS: Array<{ action: RebalanceAction; label: string; descrip
   { action: "increase_lower_rated_debt", label: "Increase lower rated debt", description: "Increase allocation to lower-rated debt (BBB+ and below)." },
 ];
 
+const DEFAULT_REBALANCE_SHIFTS: Record<RebalanceAction, string> = {
+  increase_short_dated: "10",
+  increase_long_dated: "10",
+  increase_investment_grade: "10",
+  increase_lower_rated_debt: "10",
+};
+
 function ratingClass(rating: string): string {
   if (rating.startsWith("AAA")) return "rating-aaa";
   if (rating.startsWith("AA")) return "rating-aa";
@@ -67,7 +74,8 @@ export default function InsuranceDashboardPage() {
   const [mcResult, setMcResult] = useState<MonteCarloResult | null>(null);
   const [mcRunning, setMcRunning] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("loading");
-  const [rebalanceShiftPct, setRebalanceShiftPct] = useState<number>(10);
+  const [rebalanceShiftByAction, setRebalanceShiftByAction] = useState<Record<RebalanceAction, string>>(DEFAULT_REBALANCE_SHIFTS);
+  const [durationImpact, setDurationImpact] = useState<number | null>(null);
 
   const bonds = useMemo(() => generateBonds(42), []);
   const [rawWeights, setRawWeights] = useState<Record<number, number>>(() => buildEqualWeights(generateBonds(42)));
@@ -142,9 +150,18 @@ export default function InsuranceDashboardPage() {
   }, [positionedBonds]);
 
   const applyRebalance = useCallback((action: RebalanceAction) => {
-    setRawWeights((prev) => rebalanceWeights(bonds, prev, action, rebalanceShiftPct));
-    setActiveTab("holdings");
-  }, [bonds, rebalanceShiftPct]);
+    const rawShift = rebalanceShiftByAction[action] ?? "0";
+    const parsedShift = Number(rawShift);
+    const shiftPct = Number.isFinite(parsedShift) ? Math.max(0, Math.min(100, parsedShift)) : 0;
+    const nextWeights = rebalanceWeights(bonds, rawWeights, action, shiftPct);
+    const nextNormalized = normalizeWeights(nextWeights, bonds);
+    const nextPositioned = applyPortfolioWeights(bonds, nextNormalized, portfolioMarketValue);
+    const nextSummary = calculatePortfolioSummary(nextPositioned);
+
+    setDurationImpact(nextSummary.weightedDuration - summary.weightedDuration);
+    setRawWeights(nextWeights);
+    setActiveTab("risk");
+  }, [bonds, rawWeights, rebalanceShiftByAction, portfolioMarketValue, summary.weightedDuration]);
 
   return (
     <div className="ins-page">
@@ -173,14 +190,16 @@ export default function InsuranceDashboardPage() {
       <div className="ins-content">
         {activeTab === "assets" && <AssetsTable bonds={sortedAssets} sortField={sortField} sortDir={sortDir} onSort={handleSort} onSelectBond={setSelectedBond} />}
         {activeTab === "holdings" && <HoldingsEditor bonds={bonds} weights={rawWeights} totalInputWeight={totalInputWeight} portfolioMarketValue={portfolioMarketValue} onWeightChange={(bondId, value) => { const parsed = Number(value); setRawWeights((prev) => ({ ...prev, [bondId]: Number.isFinite(parsed) ? Math.max(0, parsed) : 0 })); }} onMarketValueChange={setPortfolioMarketValue} onNormalize={() => setRawWeights(normalizeWeights(rawWeights, bonds))} onSave={savePortfolio} saveState={saveState} />}
-        {activeTab === "risk" && <RiskAnalytics bonds={positionedBonds} summary={summary} durationDist={durationDist} yieldGovt={yieldGovt} yieldCorp={yieldCorp} pv01BySector={pv01BySector} />}
+        {activeTab === "risk" && <RiskAnalytics bonds={positionedBonds} summary={summary} durationDist={durationDist} yieldGovt={yieldGovt} yieldCorp={yieldCorp} pv01BySector={pv01BySector} durationImpact={durationImpact} />}
         {activeTab === "montecarlo" && <MonteCarloPanel result={mcResult} running={mcRunning} onRun={handleRunMC} />}
         {activeTab === "rebalance" && (
           <RebalancePanel
             actions={REBALANCE_ACTIONS}
             onApply={applyRebalance}
-            shiftPct={rebalanceShiftPct}
-            onShiftPctChange={setRebalanceShiftPct}
+            shiftByAction={rebalanceShiftByAction}
+            onShiftChange={(action, value) =>
+              setRebalanceShiftByAction((prev) => ({ ...prev, [action]: value }))
+            }
           />
         )}
       </div>
@@ -300,13 +319,14 @@ function HoldingsEditor({
     </div>
   );
 }
-function RiskAnalytics({ summary, durationDist, yieldGovt, yieldCorp, pv01BySector, bonds }: {
+function RiskAnalytics({ summary, durationDist, yieldGovt, yieldCorp, pv01BySector, bonds, durationImpact }: {
   summary: ReturnType<typeof calculatePortfolioSummary>;
   durationDist: ReturnType<typeof getDurationDistribution>;
   yieldGovt: { maturity: number; yield: number }[];
   yieldCorp: { maturity: number; yield: number }[];
   pv01BySector: { sector: string; pv01: number }[];
   bonds: Bond[];
+  durationImpact: number | null;
 }) {
   const expectedLossByRating = useMemo(() => {
     const map = new Map<string, number>();
@@ -316,6 +336,19 @@ function RiskAnalytics({ summary, durationDist, yieldGovt, yieldCorp, pv01BySect
 
   return (
     <div className="ins-charts-grid">
+      <div className="ins-card">
+        <div className="ins-card-header"><span className="ins-card-title">Duration Impact</span></div>
+        <div className="ins-card-body">
+          <div className="ins-rebalance-text">
+            Current portfolio duration: <strong>{formatNumber(summary.weightedDuration)}</strong>
+          </div>
+          {durationImpact !== null && (
+            <div className="ins-rebalance-text">
+              Change from last rebalance: <strong>{durationImpact >= 0 ? "+" : ""}{formatNumber(durationImpact)}</strong>
+            </div>
+          )}
+        </div>
+      </div>
       <div className="ins-card"><div className="ins-card-header"><span className="ins-card-title">Duration Distribution</span></div><div className="ins-card-body"><ResponsiveContainer width="100%" height={260}><BarChart data={durationDist}><CartesianGrid strokeDasharray="3 3" stroke="#21262d" /><XAxis dataKey="bucket" tick={{ fill: "#8b949e", fontSize: 10 }} /><YAxis tick={{ fill: "#8b949e", fontSize: 10 }} /><Tooltip contentStyle={{ background: "#1c2128", border: "1px solid #30363d", borderRadius: 4, fontSize: 11 }} /><Bar dataKey="count" fill={COLORS.blue} radius={[3, 3, 0, 0]} name="# Bonds" /></BarChart></ResponsiveContainer></div></div>
       <div className="ins-card"><div className="ins-card-header"><span className="ins-card-title">Sector Allocation (Market Value)</span></div><div className="ins-card-body"><ResponsiveContainer width="100%" height={260}><PieChart><Pie data={summary.sectorBreakdown} cx="50%" cy="50%" innerRadius={55} outerRadius={95} dataKey="value" nameKey="name" paddingAngle={2} label={(props) => `${props.name ?? ""} ${((props.percent ?? 0) * 100).toFixed(0)}%`}>{summary.sectorBreakdown.map((entry) => <Cell key={entry.name} fill={SECTOR_COLORS[entry.name] ?? COLORS.gray} />)}</Pie><Tooltip contentStyle={{ background: "#1c2128", border: "1px solid #30363d", borderRadius: 4, fontSize: 11 }} formatter={(value) => formatUSD(Number(value ?? 0))} /></PieChart></ResponsiveContainer></div></div>
       <div className="ins-card"><div className="ins-card-header"><span className="ins-card-title">Yield vs Maturity</span></div><div className="ins-card-body"><ResponsiveContainer width="100%" height={260}><ScatterChart><CartesianGrid strokeDasharray="3 3" stroke="#21262d" /><XAxis dataKey="maturity" tick={{ fill: "#8b949e", fontSize: 10 }} /><YAxis dataKey="yield" tick={{ fill: "#8b949e", fontSize: 10 }} /><Tooltip contentStyle={{ background: "#1c2128", border: "1px solid #30363d", borderRadius: 4, fontSize: 11 }} formatter={(value) => `${Number(value ?? 0).toFixed(2)}%`} /><Legend wrapperStyle={{ fontSize: 11, color: "#8b949e" }} /><Scatter name="Government" data={yieldGovt} fill={COLORS.blue} /><Scatter name="Corporate" data={yieldCorp} fill={COLORS.orange} /></ScatterChart></ResponsiveContainer></div></div>
@@ -363,40 +396,49 @@ function MonteCarloPanel({ result, running, onRun }: { result: MonteCarloResult 
     </div>
   );
 }
-function RebalancePanel({ actions, onApply, shiftPct, onShiftPctChange }: {
+function RebalancePanel({ actions, onApply, shiftByAction, onShiftChange }: {
   actions: Array<{ action: RebalanceAction; label: string; description: string }>;
   onApply: (action: RebalanceAction) => void;
-  shiftPct: number;
-  onShiftPctChange: (value: number) => void;
+  shiftByAction: Record<RebalanceAction, string>;
+  onShiftChange: (action: RebalanceAction, value: string) => void;
 }) {
+  const sanitizeShiftInput = (raw: string): string => {
+    let cleaned = raw.replace(/[^\d.]/g, "");
+    const dot = cleaned.indexOf(".");
+    if (dot !== -1) cleaned = `${cleaned.slice(0, dot + 1)}${cleaned.slice(dot + 1).replace(/\./g, "")}`;
+    if (cleaned.startsWith("0") && !cleaned.startsWith("0.") && cleaned.length > 1) {
+      cleaned = cleaned.replace(/^0+/, "");
+    }
+    return cleaned;
+  };
+
   return (
-    <>
-      <div className="ins-card" style={{ marginBottom: 16 }}>
-        <div className="ins-card-header"><span className="ins-card-title">Rebalance Settings</span></div>
-        <div className="ins-card-body">
-          <label style={{ display: "flex", flexDirection: "column", gap: 6, maxWidth: 240 }}>
-            Shift Percentage (%)
-            <input
-              className="ins-input"
-              type="number"
-              min={0}
-              max={100}
-              step={0.5}
-              value={shiftPct}
-              onChange={(e) => onShiftPctChange(Math.max(0, Math.min(100, Number(e.target.value || 0))))}
-            />
-          </label>
-        </div>
-      </div>
-      <div className="ins-rebalance-grid">
-        {actions.map((item) => (
-          <div className="ins-card" key={item.action}>
-            <div className="ins-card-header"><span className="ins-card-title">{item.label}</span></div>
-            <div className="ins-card-body"><p className="ins-rebalance-text">{item.description}</p><button className="ins-btn ins-btn-primary" onClick={() => onApply(item.action)}>Apply Rebalance</button></div>
+    <div className="ins-rebalance-grid">
+      {actions.map((item) => (
+        <div className="ins-card" key={item.action}>
+          <div className="ins-card-header"><span className="ins-card-title">{item.label}</span></div>
+          <div className="ins-card-body">
+            <p className="ins-rebalance-text">{item.description}</p>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+              Shift Percentage (%)
+              <input
+                className="ins-input"
+                type="text"
+                inputMode="decimal"
+                value={shiftByAction[item.action]}
+                onChange={(e) => onShiftChange(item.action, sanitizeShiftInput(e.target.value))}
+                onBlur={(e) => {
+                  const parsed = Number(e.target.value || "0");
+                  const clamped = Number.isFinite(parsed) ? Math.max(0, Math.min(100, parsed)) : 0;
+                  onShiftChange(item.action, String(clamped));
+                }}
+              />
+            </label>
+            <button className="ins-btn ins-btn-primary" onClick={() => onApply(item.action)}>Apply Rebalance</button>
           </div>
-        ))}
-      </div>
-    </>
+        </div>
+      ))}
+    </div>
   );
 }
 
