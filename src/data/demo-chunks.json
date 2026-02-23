@@ -1,0 +1,187 @@
+[
+  {
+    "id": "prin-1-1",
+    "text": "PRIN 1.1.1G — The Principles are a general statement of the fundamental obligations of firms under the regulatory system. They derive their authority from the FCA's rule-making powers as set out in the Act and reflect the FCA's regulatory objectives. The Principles apply to every firm that is subject to the FCA's jurisdiction. A firm should ensure that it conducts its business in compliance with the Principles at all times.",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 1.1.1G", "title": "Application of the Principles" }
+  },
+  {
+    "id": "prin-2-1-1",
+    "text": "Principle 1 — Integrity: A firm must conduct its business with integrity. This means a firm must observe proper standards of market conduct. It should deal with its customers, counterparties and regulators in an open and honest manner. A firm should not mislead clients or engage in any conduct that would bring the financial services industry into disrepute.",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 2.1.1R", "title": "Principle 1 — Integrity" }
+  },
+  {
+    "id": "prin-2-1-2",
+    "text": "Principle 2 — Skill, care and diligence: A firm must conduct its business with due skill, care and diligence. This principle requires firms to ensure they have competent staff, adequate systems, and appropriate oversight arrangements to deliver their services to a proper standard. Firms should take reasonable steps to ensure that staff are appropriately trained and supervised.",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 2.1.2R", "title": "Principle 2 — Skill, care and diligence" }
+  },
+  {
+    "id": "prin-2-1-3",
+    "text": "Principle 3 — Management and control: A firm must take reasonable care to organise and control its affairs responsibly and effectively, with adequate risk management systems. This means having appropriate governance arrangements, clear lines of responsibility, and systems to ensure compliance with regulatory requirements. Senior management must be able to demonstrate effective oversight of the firm's activities.",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 2.1.3R", "title": "Principle 3 — Management and control" }
+  },
+  {
+    "id": "prin-2-1-4",
+    "text": "Principle 4 — Financial prudence: A firm must maintain adequate financial resources. Firms must ensure they can meet their liabilities as they fall due and maintain sufficient capital buffers to absorb losses. The FCA expects firms to have robust financial planning processes and to monitor their financial position on an ongoing basis.",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 2.1.4R", "title": "Principle 4 — Financial prudence" }
+  },
+  {
+    "id": "prin-2-1-5",
+    "text": "Principle 5 — Market conduct: A firm must observe proper standards of market conduct. This includes compliance with market abuse regulations, proper handling of inside information, and ensuring that the firm's activities do not distort markets. Firms must have adequate systems and controls to monitor market conduct risks.",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 2.1.5R", "title": "Principle 5 — Market conduct" }
+  },
+  {
+    "id": "prin-2-1-6",
+    "text": "Principle 6 — Customers' interests: A firm must pay due regard to the interests of its customers and treat them fairly. This is the foundation of the FCA's Treating Customers Fairly (TCF) initiative. Firms must ensure that: products are designed to meet the needs of identified consumer groups; consumers are provided with clear information; consumers receive suitable advice; products perform as firms have led consumers to expect; and consumers do not face unreasonable post-sale barriers.",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 2.1.6R", "title": "Principle 6 — Customers' interests (TCF)" }
+  },
+  {
+    "id": "prin-2-1-7",
+    "text": "Principle 7 — Communications with clients: A firm must pay due regard to the information needs of its clients, and communicate information to them in a way which is clear, fair and not misleading. This applies to all communications including financial promotions, pre-contractual information, and ongoing reporting. The firm should consider the target audience and ensure communications are appropriate.",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 2.1.7R", "title": "Principle 7 — Communications with clients" }
+  },
+  {
+    "id": "prin-2-1-8",
+    "text": "Principle 8 — Conflicts of interest: A firm must manage conflicts of interest fairly, both between itself and its customers and between a customer and another client. Firms should identify, prevent, manage and disclose conflicts of interest. Where conflicts cannot be managed, the firm should decline to act.",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 2.1.8R", "title": "Principle 8 — Conflicts of interest" }
+  },
+  {
+    "id": "prin-2-1-9",
+    "text": "Principle 9 — Customers: relationships of trust: A firm must take reasonable care to ensure the suitability of its advice and discretionary decisions for any customer who is entitled to rely upon its judgment. This principle applies where a firm gives personal recommendations or manages investments on a discretionary basis.",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 2.1.9R", "title": "Principle 9 — Relationships of trust" }
+  },
+  {
+    "id": "prin-2-1-10",
+    "text": "Principle 10 — Clients' assets: A firm must arrange adequate protection for clients' assets when it is responsible for them. This includes proper segregation of client money, appropriate custody arrangements, and adequate record-keeping. The CASS sourcebook provides detailed rules on client asset protection.",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 2.1.10R", "title": "Principle 10 — Clients' assets" }
+  },
+  {
+    "id": "prin-2-1-11",
+    "text": "Principle 11 — Relations with regulators: A firm must deal with its regulators in an open and cooperative way, and must disclose to the appropriate regulator appropriately anything relating to the firm of which that regulator would reasonably expect notice. This includes notifying the FCA of significant events, breaches, and changes in circumstances.",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 2.1.11R", "title": "Principle 11 — Relations with regulators" }
+  },
+  {
+    "id": "prin-2-1-12",
+    "text": "Principle 12 — Consumer Duty: A firm must act to deliver good outcomes for retail customers. The Consumer Duty (introduced July 2023) sets higher expectations for firms and requires them to put customers' needs first. It comprises: the consumer principle (act to deliver good outcomes); cross-cutting rules (act in good faith, avoid foreseeable harm, enable and support customers); and four outcomes (products and services, price and value, consumer understanding, consumer support).",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 2A", "title": "Principle 12 — Consumer Duty" }
+  },
+  {
+    "id": "prin-tcf-1",
+    "text": "Treating Customers Fairly (TCF) — The FCA expects firms to demonstrate that fair treatment of customers is central to their corporate culture. The six consumer outcomes that firms should strive for are: (1) consumers can be confident they are dealing with firms where fair treatment is central to the corporate culture; (2) products and services marketed and sold in the retail market are designed to meet the needs of identified consumer groups; (3) consumers are provided with clear information and kept appropriately informed before, during and after the point of sale; (4) where consumers receive advice, the advice is suitable and takes account of their circumstances; (5) consumers are provided with products that perform as firms have led them to expect, and the associated service is of an acceptable standard; (6) consumers do not face unreasonable post-sale barriers imposed by firms to change product, switch provider, submit a claim or make a complaint.",
+    "metadata": { "sourcebook": "PRIN", "section": "PRIN 6 Guidance", "title": "Treating Customers Fairly — Six Outcomes" }
+  },
+  {
+    "id": "sysc-1-1",
+    "text": "SYSC 1.1.1R — A firm must have robust governance arrangements, which include a clear organisational structure with well-defined, transparent and consistent lines of responsibility, effective processes to identify, manage, monitor and report the risks it is or might be exposed to, and internal control mechanisms, including sound administrative and accounting procedures and effective control and safeguard arrangements for information processing systems.",
+    "metadata": { "sourcebook": "SYSC", "section": "SYSC 1.1.1R", "title": "General organisational requirements" }
+  },
+  {
+    "id": "sysc-3-1",
+    "text": "SYSC 3.1 — Systems and controls: A firm must take reasonable care to establish and maintain such systems and controls as are appropriate to its business. Systems and controls should be proportionate to the nature, scale and complexity of the firm's activities. The firm's senior management is responsible for ensuring that appropriate systems and controls are maintained and reviewed regularly.",
+    "metadata": { "sourcebook": "SYSC", "section": "SYSC 3.1", "title": "Systems and controls" }
+  },
+  {
+    "id": "sysc-3-2",
+    "text": "SYSC 3.2 — Areas covered by systems and controls: A firm's systems and controls should cover, as a minimum: compliance with regulatory requirements; risk management; internal audit; financial reporting; decision-making procedures; accounting policies; IT systems security; business continuity; outsourcing arrangements; and the handling of client assets.",
+    "metadata": { "sourcebook": "SYSC", "section": "SYSC 3.2", "title": "Areas covered by systems and controls" }
+  },
+  {
+    "id": "sysc-6-1",
+    "text": "SYSC 6.1 — Compliance: A firm must establish, implement and maintain adequate policies and procedures sufficient to ensure compliance of the firm including its managers, employees and appointed representatives with its obligations under the regulatory system. The compliance function should have the necessary authority, resources, expertise and access to all relevant information to carry out its responsibilities effectively.",
+    "metadata": { "sourcebook": "SYSC", "section": "SYSC 6.1", "title": "Compliance" }
+  },
+  {
+    "id": "sysc-6-3",
+    "text": "SYSC 6.3 — Financial crime: A firm must ensure that it has adequate systems and controls in place to mitigate the risk that it might be used to further financial crime. This includes anti-money laundering (AML) controls, counter-terrorist financing measures, sanctions screening, fraud prevention systems, and anti-bribery and corruption policies. Firms should conduct regular risk assessments and ensure that staff receive appropriate training.",
+    "metadata": { "sourcebook": "SYSC", "section": "SYSC 6.3", "title": "Financial crime" }
+  },
+  {
+    "id": "sysc-aml-1",
+    "text": "Anti-Money Laundering Systems and Controls — Under SYSC 6.3 and the Money Laundering Regulations, firms must: appoint a Money Laundering Reporting Officer (MLRO); conduct customer due diligence (CDD) including enhanced due diligence for high-risk customers; maintain ongoing monitoring of business relationships; screen customers against sanctions lists; report suspicious activity to the National Crime Agency via SARs; keep adequate records for at least five years; and provide regular AML training to all relevant staff.",
+    "metadata": { "sourcebook": "SYSC", "section": "SYSC 6.3.1R", "title": "AML systems and controls" }
+  },
+  {
+    "id": "sysc-9-1",
+    "text": "SYSC 9.1 — Record keeping: A firm must arrange for orderly records to be kept of its business and internal organisation, including all services and transactions undertaken by it, which must be sufficient to enable the FCA to monitor the firm's compliance with requirements under the regulatory system. Records must be retained for the prescribed periods and be readily accessible.",
+    "metadata": { "sourcebook": "SYSC", "section": "SYSC 9.1", "title": "General rules on record keeping" }
+  },
+  {
+    "id": "cobs-2-1",
+    "text": "COBS 2.1 — Acting honestly, fairly and professionally: A firm must act honestly, fairly and professionally in accordance with the best interests of its client. This overarching obligation applies to all aspects of a firm's relationship with its clients and is central to the MiFID conduct of business regime.",
+    "metadata": { "sourcebook": "COBS", "section": "COBS 2.1", "title": "Acting honestly, fairly and professionally" }
+  },
+  {
+    "id": "cobs-2-3",
+    "text": "COBS 2.3 — Inducements: A firm must not pay or accept any fee or commission, or provide or receive any non-monetary benefit, in connection with the provision of an investment service or an ancillary service, to or from any party except the client, unless the payment or benefit is designed to enhance the quality of the relevant service to the client and does not impair the firm's duty to act in the best interests of the client. Under MiFID II, the rules on inducements have been significantly tightened, particularly for independent advisers and portfolio managers who are generally prohibited from receiving third-party inducements.",
+    "metadata": { "sourcebook": "COBS", "section": "COBS 2.3", "title": "Inducements relating to MiFID business" }
+  },
+  {
+    "id": "cobs-4-2",
+    "text": "COBS 4.2 — Fair, clear and not misleading communications: A firm must ensure that a communication or a financial promotion is fair, clear and not misleading. This rule applies to all communications with clients and potential clients. Firms should consider the target audience, the complexity of the product, and whether the communication presents a balanced view of risks and benefits.",
+    "metadata": { "sourcebook": "COBS", "section": "COBS 4.2", "title": "Fair, clear and not misleading communications" }
+  },
+  {
+    "id": "cobs-9-2",
+    "text": "COBS 9.2 — Suitability: A firm must take reasonable steps to ensure that a personal recommendation, or a decision to trade, is suitable for the client. The firm must obtain sufficient information about the client's knowledge and experience, financial situation, and investment objectives to make the suitability assessment. This includes understanding the client's risk tolerance, capacity for loss, and investment time horizon.",
+    "metadata": { "sourcebook": "COBS", "section": "COBS 9.2", "title": "Assessing suitability" }
+  },
+  {
+    "id": "cobs-11-2",
+    "text": "COBS 11.2 — Best execution: A firm must take all sufficient steps to obtain, when executing orders, the best possible result for its clients taking into account price, costs, speed, likelihood of execution and settlement, size, nature or any other consideration relevant to the execution of the order. Firms must establish and implement an order execution policy and obtain prior consent from clients.",
+    "metadata": { "sourcebook": "COBS", "section": "COBS 11.2", "title": "Best execution" }
+  },
+  {
+    "id": "icobs-2-2",
+    "text": "ICOBS 2.2 — The customer's best interests rule: A firm must act honestly, fairly and professionally in accordance with the best interests of its customer when carrying out insurance distribution activities. This includes providing appropriate information to the customer before, during and after the conclusion of an insurance contract.",
+    "metadata": { "sourcebook": "ICOBS", "section": "ICOBS 2.2", "title": "The customer's best interests rule" }
+  },
+  {
+    "id": "icobs-5-1",
+    "text": "ICOBS 5.1 — Demands and needs: Before the conclusion of an insurance contract, a firm must specify, on the basis of information obtained from the customer, the demands and the needs of that customer. Any contract proposed must be consistent with the customer's insurance demands and needs. For advised sales, the firm must also provide a personalised recommendation explaining why a particular product best meets the customer's demands and needs.",
+    "metadata": { "sourcebook": "ICOBS", "section": "ICOBS 5.1", "title": "Identifying customer demands and needs" }
+  },
+  {
+    "id": "icobs-6-1",
+    "text": "ICOBS 6.1 — Product information: A firm must provide a customer with appropriate information about an insurance product in good time before the conclusion of an insurance contract so that the customer can make an informed decision. For non-investment insurance this includes the Insurance Product Information Document (IPID). The information must be provided in a comprehensible form.",
+    "metadata": { "sourcebook": "ICOBS", "section": "ICOBS 6.1", "title": "Product information" }
+  },
+  {
+    "id": "icobs-8-1",
+    "text": "ICOBS 8.1 — Claims handling: An insurer must handle claims promptly and fairly; provide reasonable guidance to help a policyholder make a claim and appropriate information on its progress; not unreasonably reject a claim; and settle claims promptly once settlement terms are agreed. Firms should ensure that claims handlers are appropriately trained and that systems are in place to track and monitor claim outcomes.",
+    "metadata": { "sourcebook": "ICOBS", "section": "ICOBS 8.1", "title": "Claims handling" }
+  },
+  {
+    "id": "disp-1-1",
+    "text": "DISP 1.1 — Purpose and application: The dispute resolution rules require firms to have effective and transparent procedures for the reasonable and prompt handling of complaints. A complaint is any oral or written expression of dissatisfaction, whether justified or not, from or on behalf of a person about the provision of, or failure to provide, a financial services activity.",
+    "metadata": { "sourcebook": "DISP", "section": "DISP 1.1", "title": "Purpose and application" }
+  },
+  {
+    "id": "disp-1-3",
+    "text": "DISP 1.3 — Complaints handling procedures: A firm must put in place appropriate management controls and take reasonable steps to ensure that in handling complaints it identifies and remedies any recurring or systemic problems. Firms should investigate complaints competently, diligently and impartially, and assess fairly whether the complaint should be upheld. The firm must send a final response within 8 weeks of receiving the complaint.",
+    "metadata": { "sourcebook": "DISP", "section": "DISP 1.3", "title": "Complaints handling procedures" }
+  },
+  {
+    "id": "disp-1-6",
+    "text": "DISP 1.6 — Time limits for complainants: A complainant must refer a complaint to the Financial Ombudsman Service (FOS) within six months of the date of the firm's final response. The FOS may consider complaints outside this time limit in exceptional circumstances. Firms must inform complainants of their right to refer to the FOS in their final response letter.",
+    "metadata": { "sourcebook": "DISP", "section": "DISP 1.6", "title": "Time limits" }
+  },
+  {
+    "id": "disp-2-1",
+    "text": "DISP 2 — The Financial Ombudsman Service: The FOS provides an independent dispute resolution service for eligible complainants. The FOS can consider complaints about most regulated financial services activities. The ombudsman determines what is fair and reasonable in all the circumstances of the case, having regard to relevant law and regulations, regulators' rules and guidance, and good industry practice.",
+    "metadata": { "sourcebook": "DISP", "section": "DISP 2", "title": "The Financial Ombudsman Service" }
+  },
+  {
+    "id": "fcg-1-1",
+    "text": "FCG 1.1 — Financial Crime Guide: This guide provides guidance on steps that firms can take to reduce the risk that they might be used to further financial crime. Financial crime includes fraud, money laundering, terrorist financing, bribery and corruption, sanctions breaches, insider dealing and market manipulation. The guide should be read alongside the requirements in SYSC 6.3 and the Money Laundering, Terrorist Financing and Transfer of Funds Regulations.",
+    "metadata": { "sourcebook": "FCG", "section": "FCG 1.1", "title": "Financial Crime Guide overview" }
+  },
+  {
+    "id": "fcg-3-1",
+    "text": "FCG 3 — Money laundering and terrorist financing: Firms must implement a risk-based approach to anti-money laundering. This includes: conducting a firm-wide risk assessment; applying customer due diligence measures proportionate to the risk; implementing ongoing monitoring systems to detect suspicious activity; screening against sanctions lists and PEP databases; filing Suspicious Activity Reports (SARs) with the NCA; and maintaining records of all CDD measures for at least five years after the business relationship has ended.",
+    "metadata": { "sourcebook": "FCG", "section": "FCG 3", "title": "Money laundering and terrorist financing" }
+  },
+  {
+    "id": "fcg-4-1",
+    "text": "FCG 4 — Sanctions: Firms must have adequate systems and controls to ensure compliance with financial sanctions obligations. This includes screening customers and transactions against the Office of Financial Sanctions Implementation (OFSI) consolidated list, the EU sanctions list, and the US OFAC SDN list where applicable. Firms should screen at onboarding, on an ongoing basis, and when sanctions lists are updated.",
+    "metadata": { "sourcebook": "FCG", "section": "FCG 4", "title": "Sanctions" }
+  }
+]
