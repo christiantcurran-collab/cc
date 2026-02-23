@@ -4,21 +4,17 @@ All notable push-level changes are documented in this file.
 
 ## 2026-02-23
 
-### `feat: establish CTC Portfolio baseline`
+### `b277cf4` - feat: initialize CTC Portfolio application
 
-- Initialized repository content for the portfolio application.
-- Preserved the current Next.js app structure, API routes, and demos.
+- Initialized the portfolio in a clean repository history.
+- Added the full Next.js application, API routes, interactive demos, and supporting data.
+- Kept project naming as CTC Portfolio while including GPT/Codex capabilities in app copy.
 
-### `feat: add subtle GPT and Codex references across UI`
+### `9a267fa` - docs: refine README and architecture notes for GPT/Codex usage
 
-- Updated metadata and interface copy to keep the project name as CTC Portfolio.
-- Added concise mentions of GPT/Codex usage in key UI surfaces.
+- Updated `README.md` with repository reference and clearer capability notes.
+- Expanded `SYSTEM_ARCHITECTURE.md` with model configuration responsibilities.
 
-### `docs: publish complete project documentation`
+### `docs: add changelog with push-by-push feature log`
 
-- Added and refined `README.md` with setup, environment, routes, and operations.
-- Added `SYSTEM_ARCHITECTURE.md` covering components, data flow, and deployment.
-
-### `docs: add repository changelog`
-
-- Added this changelog to track push-level feature history.
+- Added this changelog to track commit-level feature delivery.
