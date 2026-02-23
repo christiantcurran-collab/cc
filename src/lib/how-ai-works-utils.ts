@@ -89,7 +89,7 @@ export const STOP_OPTIONS: Record<string, string[] | null> = {
 };
 
 export const DEFAULT_PARAMS: HowAIWorksParams = {
-  model: "gpt-4o",
+  model: "gpt-5-mini",
   temperature: 0.7,
   top_p: 1.0,
   max_tokens: 1,

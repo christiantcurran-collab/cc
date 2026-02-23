@@ -45,7 +45,7 @@ interface CachedResponse {
   generated_at: string;
 }
 
-const MODELS = ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"];
+const MODELS = ["gpt-5.1", "gpt-5-mini", "gpt-4.1", "gpt-4.1-mini"];
 const TEMPERATURES = [0.0, 0.5, 1.0, 1.5, 2.0];
 const TOP_PS = [0.2, 0.4, 0.6, 0.8, 1.0];
 const PENALTIES = [0.0, 1.0, 2.0];
@@ -134,13 +134,13 @@ function contextBoosts(context: string | null): Record<string, number> {
 
 function modelBoosts(model: string): Record<string, number> {
   switch (model) {
-    case "gpt-4o":
+    case "gpt-5.1":
       return { " garden": 0.4, " path": 0.2 };
-    case "gpt-4o-mini":
+    case "gpt-5-mini":
       return { " door": 0.3, " yard": 0.2 };
-    case "gpt-4-turbo":
+    case "gpt-4.1":
       return { " house": 0.3, " porch": 0.2 };
-    case "gpt-3.5-turbo":
+    case "gpt-4.1-mini":
       return { " street": 0.25, " road": 0.2 };
     default:
       return {};
@@ -236,7 +236,7 @@ function buildEntry(params: CachedResponse["params"]): CachedResponse {
 
 function makeBaseParams(): CachedResponse["params"] {
   return {
-    model: "gpt-4o",
+    model: "gpt-5-mini",
     temperature: 0.7,
     top_p: 1.0,
     max_tokens: 1,

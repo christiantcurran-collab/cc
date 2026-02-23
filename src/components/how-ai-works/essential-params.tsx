@@ -75,10 +75,10 @@ export function EssentialParams({ params, onChange }: EssentialParamsProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="gpt-4o">gpt-4o</SelectItem>
-            <SelectItem value="gpt-4o-mini">gpt-4o-mini</SelectItem>
-            <SelectItem value="gpt-4-turbo">gpt-4-turbo</SelectItem>
-            <SelectItem value="gpt-3.5-turbo">gpt-3.5-turbo</SelectItem>
+            <SelectItem value="gpt-5.1">gpt-5.1</SelectItem>
+            <SelectItem value="gpt-5-mini">gpt-5-mini</SelectItem>
+            <SelectItem value="gpt-4.1">gpt-4.1</SelectItem>
+            <SelectItem value="gpt-4.1-mini">gpt-4.1-mini</SelectItem>
           </SelectContent>
         </Select>
         <p className="text-[11px] text-muted-foreground/80 leading-relaxed">
