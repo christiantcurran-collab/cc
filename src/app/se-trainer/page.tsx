@@ -213,10 +213,10 @@ export default function SETrainerPage() {
       <div style={{ borderBottom: `1px solid ${colors.border}`, background: colors.surface }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", gap: 0, overflowX: "auto" }}>
           {[
-            { key: "docs", label: "\uD83D\uDCC4 Documentation", desc: "10 Technical Areas" },
-            { key: "quiz", label: "\uD83E\uDDEA Quiz", desc: `${questions.length} Questions` },
-            { key: "practice", label: "\uD83C\uDFAF Practice", desc: `${practiceQuestions.length} Scenarios` },
-            { key: "community", label: "\uD83D\uDC65 Community", desc: "Submit Questions" },
+            { key: "docs", label: "Docs" },
+            { key: "quiz", label: "Quiz" },
+            { key: "practice", label: "Practice" },
+            { key: "community", label: "Community" },
           ].map((t) => (
             <button
               key={t.key}
@@ -225,20 +225,20 @@ export default function SETrainerPage() {
                 if (t.key !== "docs") setSelectedSection(null);
               }}
               style={{
-                padding: "14px 24px",
+                padding: "12px 16px",
                 background: tab === t.key ? colors.accentGlow : "transparent",
                 border: "none",
                 borderBottom: tab === t.key ? `2px solid ${colors.accent}` : "2px solid transparent",
                 color: tab === t.key ? colors.accent : colors.textDim,
                 cursor: "pointer",
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: 600,
                 fontFamily: "inherit",
                 transition: "all 0.2s",
                 whiteSpace: "nowrap",
               }}
             >
-              {t.label} <span style={{ fontSize: 11, opacity: 0.7, marginLeft: 4 }}>{t.desc}</span>
+              {t.label}
             </button>
           ))}
         </div>

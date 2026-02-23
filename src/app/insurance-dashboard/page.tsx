@@ -16,7 +16,7 @@ import "./insurance-dashboard.css";
 
 const COMPANY_NAME = "Insurance Company A";
 
-type TabKey = "assets" | "holdings" | "risk" | "montecarlo" | "rebalance";
+type TabKey = "assets" | "holdings" | "risk" | "montecarlo";
 type SaveState = "loading" | "idle" | "saving" | "saved" | "error";
 
 const COLORS = {
@@ -184,24 +184,27 @@ export default function InsuranceDashboardPage() {
         <button className={`ins-tab ${activeTab === "holdings" ? "active" : ""}`} onClick={() => setActiveTab("holdings")}>2. Holdings</button>
         <button className={`ins-tab ${activeTab === "risk" ? "active" : ""}`} onClick={() => setActiveTab("risk")}>3. Risk</button>
         <button className={`ins-tab ${activeTab === "montecarlo" ? "active" : ""}`} onClick={() => setActiveTab("montecarlo")}>4. Monte Carlo</button>
-        <button className={`ins-tab ${activeTab === "rebalance" ? "active" : ""}`} onClick={() => setActiveTab("rebalance")}>5. Rebalance</button>
       </div>
 
       <div className="ins-content">
         {activeTab === "assets" && <AssetsTable bonds={sortedAssets} sortField={sortField} sortDir={sortDir} onSort={handleSort} onSelectBond={setSelectedBond} />}
-        {activeTab === "holdings" && <HoldingsEditor bonds={bonds} weights={rawWeights} totalInputWeight={totalInputWeight} portfolioMarketValue={portfolioMarketValue} onWeightChange={(bondId, value) => { const parsed = Number(value); setRawWeights((prev) => ({ ...prev, [bondId]: Number.isFinite(parsed) ? Math.max(0, parsed) : 0 })); }} onMarketValueChange={setPortfolioMarketValue} onNormalize={() => setRawWeights(normalizeWeights(rawWeights, bonds))} onSave={savePortfolio} saveState={saveState} />}
+        {activeTab === "holdings" && (
+          <>
+            <HoldingsEditor bonds={bonds} weights={rawWeights} totalInputWeight={totalInputWeight} portfolioMarketValue={portfolioMarketValue} onWeightChange={(bondId, value) => { const parsed = Number(value); setRawWeights((prev) => ({ ...prev, [bondId]: Number.isFinite(parsed) ? Math.max(0, parsed) : 0 })); }} onMarketValueChange={setPortfolioMarketValue} onNormalize={() => setRawWeights(normalizeWeights(rawWeights, bonds))} onSave={savePortfolio} saveState={saveState} />
+            <div style={{ marginTop: 16 }}>
+              <RebalancePanel
+                actions={REBALANCE_ACTIONS}
+                onApply={applyRebalance}
+                shiftByAction={rebalanceShiftByAction}
+                onShiftChange={(action, value) =>
+                  setRebalanceShiftByAction((prev) => ({ ...prev, [action]: value }))
+                }
+              />
+            </div>
+          </>
+        )}
         {activeTab === "risk" && <RiskAnalytics bonds={positionedBonds} summary={summary} durationDist={durationDist} yieldGovt={yieldGovt} yieldCorp={yieldCorp} pv01BySector={pv01BySector} durationImpact={durationImpact} />}
         {activeTab === "montecarlo" && <MonteCarloPanel result={mcResult} running={mcRunning} onRun={handleRunMC} />}
-        {activeTab === "rebalance" && (
-          <RebalancePanel
-            actions={REBALANCE_ACTIONS}
-            onApply={applyRebalance}
-            shiftByAction={rebalanceShiftByAction}
-            onShiftChange={(action, value) =>
-              setRebalanceShiftByAction((prev) => ({ ...prev, [action]: value }))
-            }
-          />
-        )}
       </div>
 
       {selectedBond && <CashflowModal bond={selectedBond} onClose={() => setSelectedBond(null)} />}
@@ -294,7 +297,7 @@ function HoldingsEditor({
         </div>
       </div>
       <div className="ins-card-body">
-        <div className="ins-holdings-note">Bond count: {bonds.length}. Default is equal-weighted ({(100 / bonds.length).toFixed(2)}% each). Total entered weight: {totalInputWeight.toFixed(2)}%{Math.abs(totalInputWeight - 100) > 0.01 && " (will be normalized in analytics and saved portfolio)."}</div>
+        <div className="ins-holdings-note">Bond count: {bonds.length}. Default is equal-weighted ({(100 / bonds.length).toFixed(2)}% each). Total entered weight: {totalInputWeight.toFixed(2)}%{Math.abs(totalInputWeight - 100) > 0.01 && " (will be normalized in analytics and saved portfolio)."} Rebalance controls are available below this table.</div>
         {saveState === "error" && <div className="ins-error">Unable to save/load portfolio from Supabase. Check env vars and SQL setup.</div>}
         {saveState === "saved" && <div className="ins-success">Portfolio saved to Supabase.</div>}
         <div className="ins-table-wrap" style={{ marginTop: 12 }}>
