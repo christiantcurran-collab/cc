@@ -6,7 +6,6 @@ Repository: `https://github.com/christiantcurran-collab/cc`
 
 ## What this project includes
 
-- RAG playground with configurable retrieval and generation parameters
 - "How AI Works" visual demo showing token probabilities and parameter effects
 - Solutions Engineer trainer with documentation, MCQ quiz, and practice feedback
 - Insurance dashboard demo for domain-specific AI exploration with persisted portfolio weights
@@ -19,7 +18,7 @@ Repository: `https://github.com/christiantcurran-collab/cc`
 - Demo mode fallback when `OPENAI_API_KEY` is not set
 - Configurable generation parameters (`model`, `temperature`, `top_p`, `max_tokens`)
 - Cached educational outputs for deterministic demos
-- Lightweight retrieval pipeline over preprocessed FCA content
+- Local context chunking and cache-based response selection for deterministic demos
 - Supabase-backed `community_questions` storage for community tab
 - Supabase-backed `insurance_demo_portfolios` storage for insurance holdings and rebalances
 - Python-backed fixed income analytics endpoint for insurance bond duration/convexity metrics (executed server-side in backend API route)
@@ -54,10 +53,10 @@ Yes, Python is used in the backend.
 
 ### Key architecture flows
 
-1. RAG Playground
-- UI sends query/config to `/api/query`.
-- Route retrieves local context chunks and optionally calls OpenAI (live mode).
-- Response returns answer + source context + metrics.
+1. How AI LLM Works
+- Interactive controls change model, temperature, top-p, penalties, and context.
+- The page loads pre-generated API outputs from `src/data/how-ai-works-cache.json`.
+- The UI finds the closest cached combination and renders token probabilities and generated text instantly.
 
 2. SE Trainer
 - Community tab uses Supabase-backed `/api/community` and `/api/community/expand`.
@@ -97,7 +96,7 @@ SE Trainer UI (Docs / Quiz / Practice / Community)
 ### 3) How an LLM Works
 
 ```text
-How-AI-Works UI controls (model/temp/top_p/RAG/etc)
+How-AI-Works UI controls (model/temp/top_p/penalties/context)
   -> local cache lookup in src/data/how-ai-works-cache.json
   -> nearest/exact match from pre-generated combinations
   -> renders token probability bars + generated text + explanation panel
@@ -151,7 +150,6 @@ Prerequisite for insurance analytics:
 - `/how-ai-works`: interactive LLM parameter visualization
 - `/insurance-dashboard`: insurance-focused analytics demo
 - `/se-trainer`: solutions engineer practice and quiz experience
-- `/playground`: RAG playground experience
 - `/about`: project and stack summary
 
 ## API endpoints
