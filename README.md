@@ -2,6 +2,8 @@
 
 An interactive Next.js portfolio focused on AI engineering patterns, with GPT-based features and Codex-assisted development workflows.
 
+Repository: `https://github.com/christiantcurran-collab/cc`
+
 ## What this project includes
 
 - RAG playground with configurable retrieval and generation parameters
@@ -13,6 +15,7 @@ An interactive Next.js portfolio focused on AI engineering patterns, with GPT-ba
 ## Core capabilities
 
 - OpenAI-powered generation and feedback endpoints
+- GPT model controls exposed in interactive demos and trainer workflows
 - Demo mode fallback when `OPENAI_API_KEY` is not set
 - Configurable generation parameters (`model`, `temperature`, `top_p`, `max_tokens`)
 - Cached educational outputs for deterministic demos

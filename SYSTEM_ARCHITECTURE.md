@@ -32,6 +32,7 @@ This document describes the architecture of the CTC Portfolio application.
 - Frontend (React/Next.js): renders pages and interactive controls.
 - API routes (Next.js server handlers): orchestrate retrieval, generation, and persistence.
 - AI integration layer (`src/lib/openai.ts`): central OpenAI client creation and live/demo gating.
+- Model configuration layer (`src/lib/types.ts`, config panel components): surfaces GPT controls used by demos and query generation.
 - Retrieval layer (`src/lib/retrieval.ts`, `src/lib/chunking.ts`): local chunk search and similarity logic.
 - Domain data (`src/data/*`): precomputed demo chunks, answers, and model output caches.
 
