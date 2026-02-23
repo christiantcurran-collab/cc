@@ -81,6 +81,12 @@ export interface MonteCarloResult {
   histogram: { bucket: string; count: number; value: number }[];
 }
 
+export type RebalanceAction =
+  | "increase_short_dated"
+  | "increase_long_dated"
+  | "increase_investment_grade"
+  | "increase_high_yield";
+
 // ============================================================
 // Constants
 // ============================================================
@@ -158,8 +164,8 @@ export function generateBonds(seed: number = 42): Bond[] {
   const bonds: Bond[] = [];
   let id = 1;
 
-  // 60 Government bonds
-  for (let i = 0; i < 60; i++) {
+  // 30 Government bonds
+  for (let i = 0; i < 30; i++) {
     const template = GOVT_TEMPLATES[i % GOVT_TEMPLATES.length];
     const maturity = 2 + Math.floor(rng() * 29);
     const coupon = Math.round((0.5 + rng() * 4.5) * 8) / 8;
@@ -173,8 +179,8 @@ export function generateBonds(seed: number = 42): Bond[] {
     }));
   }
 
-  // 40 Corporate bonds
-  for (let i = 0; i < 40; i++) {
+  // 20 Corporate bonds
+  for (let i = 0; i < 20; i++) {
     const corp = CORP_ISSUERS[i % CORP_ISSUERS.length];
     const maturity = 1 + Math.floor(rng() * 14);
     const coupon = Math.round((2.0 + rng() * 5.0) * 8) / 8;
@@ -190,6 +196,133 @@ export function generateBonds(seed: number = 42): Bond[] {
   }
 
   return bonds;
+}
+
+export function buildEqualWeights(bonds: Bond[]): Record<number, number> {
+  if (bonds.length === 0) return {};
+  const w = 100 / bonds.length;
+  return Object.fromEntries(bonds.map((b) => [b.id, Number(w.toFixed(6))]));
+}
+
+export function normalizeWeights(weights: Record<number, number>, bonds: Bond[]): Record<number, number> {
+  const ids = new Set(bonds.map((b) => b.id));
+  const cleanEntries = Object.entries(weights)
+    .map(([k, v]) => [Number(k), Number.isFinite(v) ? Math.max(0, v) : 0] as const)
+    .filter(([id]) => ids.has(id));
+
+  const total = cleanEntries.reduce((s, [, v]) => s + v, 0);
+  if (total <= 0) return buildEqualWeights(bonds);
+
+  return Object.fromEntries(cleanEntries.map(([id, v]) => [id, Number(((v / total) * 100).toFixed(6))]));
+}
+
+export function applyPortfolioWeights(
+  bonds: Bond[],
+  weights: Record<number, number>,
+  portfolioMarketValue: number
+): Bond[] {
+  const safePortfolioValue = Number.isFinite(portfolioMarketValue) && portfolioMarketValue > 0
+    ? portfolioMarketValue
+    : 0;
+
+  return bonds.map((bond) => {
+    const weightPct = Math.max(0, weights[bond.id] ?? 0);
+    const targetMarketValue = (safePortfolioValue * weightPct) / 100;
+    const scale = bond.marketPrice > 0 ? targetMarketValue / bond.marketPrice : 0;
+
+    return {
+      ...bond,
+      faceValue: bond.faceValue * scale,
+      marketPrice: targetMarketValue,
+      pv01: bond.pv01 * scale,
+      dv01: bond.dv01 * scale,
+      cr01: bond.cr01 * scale,
+      expectedLoss: bond.expectedLoss * scale,
+    };
+  });
+}
+
+function isInvestmentGrade(rating: string): boolean {
+  const idx = RATING_ORDER.indexOf(rating);
+  const bbbMinus = RATING_ORDER.indexOf("BBB-");
+  return idx !== -1 && idx <= bbbMinus;
+}
+
+function shiftExposure(
+  bonds: Bond[],
+  currentWeights: Record<number, number>,
+  increaseSelector: (bond: Bond) => boolean,
+  decreaseSelector: (bond: Bond) => boolean,
+  shiftPct: number
+): Record<number, number> {
+  const weights = { ...currentWeights };
+  const toIncrease = bonds.filter(increaseSelector);
+  const toDecrease = bonds.filter(decreaseSelector);
+  if (toIncrease.length === 0 || toDecrease.length === 0) return currentWeights;
+
+  const decreaseTotal = toDecrease.reduce((s, b) => s + (weights[b.id] ?? 0), 0);
+  const increaseTotal = toIncrease.reduce((s, b) => s + (weights[b.id] ?? 0), 0);
+  const delta = Math.min(shiftPct, decreaseTotal);
+  if (delta <= 0) return currentWeights;
+
+  for (const bond of toDecrease) {
+    const w = weights[bond.id] ?? 0;
+    const share = decreaseTotal > 0 ? w / decreaseTotal : 0;
+    weights[bond.id] = Math.max(0, w - delta * share);
+  }
+  for (const bond of toIncrease) {
+    const w = weights[bond.id] ?? 0;
+    const share = increaseTotal > 0 ? w / increaseTotal : 1 / toIncrease.length;
+    weights[bond.id] = w + delta * share;
+  }
+
+  return normalizeWeights(weights, bonds);
+}
+
+export function rebalanceWeights(
+  bonds: Bond[],
+  currentWeights: Record<number, number>,
+  action: RebalanceAction
+): Record<number, number> {
+  const normalized = normalizeWeights(currentWeights, bonds);
+  const shiftPct = 10;
+
+  switch (action) {
+    case "increase_short_dated":
+      return shiftExposure(
+        bonds,
+        normalized,
+        (b) => b.maturityYears <= 5,
+        (b) => b.maturityYears >= 10,
+        shiftPct
+      );
+    case "increase_long_dated":
+      return shiftExposure(
+        bonds,
+        normalized,
+        (b) => b.maturityYears >= 10,
+        (b) => b.maturityYears <= 5,
+        shiftPct
+      );
+    case "increase_investment_grade":
+      return shiftExposure(
+        bonds,
+        normalized,
+        (b) => isInvestmentGrade(b.rating),
+        (b) => !isInvestmentGrade(b.rating),
+        shiftPct
+      );
+    case "increase_high_yield":
+      return shiftExposure(
+        bonds,
+        normalized,
+        (b) => !isInvestmentGrade(b.rating),
+        (b) => isInvestmentGrade(b.rating),
+        shiftPct
+      );
+    default:
+      return normalized;
+  }
 }
 
 function creditSpread(rating: string, rng: () => number): number {
