@@ -76,8 +76,9 @@ Required for live AI mode:
 
 Optional integrations:
 
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (recommended for server-side insurance writes)
 
 If OpenAI key is missing, the app intentionally degrades to demo mode.
 

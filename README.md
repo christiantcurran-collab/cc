@@ -32,6 +32,33 @@ Repository: `https://github.com/christiantcurran-collab/cc`
 - OpenAI Node SDK (`openai`)
 - Recharts for visualization
 
+## Architecture at a glance
+
+```text
+Browser (Next.js pages/components)
+  -> Next.js route handlers (/api/*)
+      -> OpenAI API (generation, embeddings, feedback)
+      -> Supabase (community questions, insurance portfolio persistence)
+      -> Python metrics script (insurance duration/convexity calculations)
+  -> Local cached JSON data (demo mode and how-ai-works cache)
+```
+
+### Key architecture flows
+
+1. RAG Playground
+- UI sends query/config to `/api/query`.
+- Route retrieves local context chunks and optionally calls OpenAI (live mode).
+- Response returns answer + source context + metrics.
+
+2. SE Trainer
+- Community tab uses Supabase-backed `/api/community` and `/api/community/expand`.
+- Practice feedback uses `/api/se-trainer/feedback` with OpenAI scoring.
+
+3. Insurance Dashboard
+- Bond set is generated client-side then sent to `/api/insurance-metrics`.
+- Python script computes market price, duration, convexity, PV01/DV01, expected loss, cashflows.
+- Holdings + rebalance state is persisted via Supabase `/api/insurance-portfolio`.
+
 ## Local setup
 
 1. Install dependencies:
