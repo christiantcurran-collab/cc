@@ -26,11 +26,11 @@ Repository: `https://github.com/christiantcurran-collab/cc`
 
 ## Tech stack
 
-- Next.js 15 (App Router)
-- React 19 + TypeScript
-- Tailwind CSS + shadcn/ui + Radix primitives
-- OpenAI Node SDK (`openai`)
-- Recharts for visualization
+- Frontend: Next.js 15, React 19, TypeScript, Tailwind CSS, shadcn/ui (Radix primitives)
+- Backend: Next.js API routes (current), Python backend script execution for insurance analytics (`/api/insurance-metrics`)
+- Database: Supabase (Postgres)
+- AI: OpenAI SDK + GPT models (currently GPT-4o family in core app APIs, GPT-4.1/GPT-5.x in How-an-LLM-Works model set)
+- Hosting: Render (primary), Vercel-compatible
 
 ## Architecture at a glance
 
