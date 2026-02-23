@@ -85,7 +85,7 @@ export type RebalanceAction =
   | "increase_short_dated"
   | "increase_long_dated"
   | "increase_investment_grade"
-  | "increase_high_yield";
+  | "increase_lower_rated_debt";
 
 // ============================================================
 // Constants
@@ -248,6 +248,12 @@ function isInvestmentGrade(rating: string): boolean {
   return idx !== -1 && idx <= bbbMinus;
 }
 
+function isLowerRatedDebt(rating: string): boolean {
+  const idx = RATING_ORDER.indexOf(rating);
+  const bbbPlus = RATING_ORDER.indexOf("BBB+");
+  return idx !== -1 && idx >= bbbPlus;
+}
+
 function shiftExposure(
   bonds: Bond[],
   currentWeights: Record<number, number>,
@@ -282,10 +288,11 @@ function shiftExposure(
 export function rebalanceWeights(
   bonds: Bond[],
   currentWeights: Record<number, number>,
-  action: RebalanceAction
+  action: RebalanceAction,
+  shiftPct: number = 10
 ): Record<number, number> {
   const normalized = normalizeWeights(currentWeights, bonds);
-  const shiftPct = 10;
+  const shift = Math.max(0, Math.min(100, shiftPct));
 
   switch (action) {
     case "increase_short_dated":
@@ -294,7 +301,7 @@ export function rebalanceWeights(
         normalized,
         (b) => b.maturityYears <= 5,
         (b) => b.maturityYears >= 10,
-        shiftPct
+        shift
       );
     case "increase_long_dated":
       return shiftExposure(
@@ -302,23 +309,23 @@ export function rebalanceWeights(
         normalized,
         (b) => b.maturityYears >= 10,
         (b) => b.maturityYears <= 5,
-        shiftPct
+        shift
       );
     case "increase_investment_grade":
       return shiftExposure(
         bonds,
         normalized,
         (b) => isInvestmentGrade(b.rating),
-        (b) => !isInvestmentGrade(b.rating),
-        shiftPct
+        (b) => isLowerRatedDebt(b.rating),
+        shift
       );
-    case "increase_high_yield":
+    case "increase_lower_rated_debt":
       return shiftExposure(
         bonds,
         normalized,
-        (b) => !isInvestmentGrade(b.rating),
-        (b) => isInvestmentGrade(b.rating),
-        shiftPct
+        (b) => isLowerRatedDebt(b.rating),
+        (b) => !isLowerRatedDebt(b.rating),
+        shift
       );
     default:
       return normalized;
