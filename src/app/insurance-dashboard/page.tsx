@@ -77,13 +77,42 @@ export default function InsuranceDashboardPage() {
   const [rebalanceShiftByAction, setRebalanceShiftByAction] = useState<Record<RebalanceAction, string>>(DEFAULT_REBALANCE_SHIFTS);
   const [durationImpact, setDurationImpact] = useState<number | null>(null);
 
-  const bonds = useMemo(() => generateBonds(42), []);
-  const [rawWeights, setRawWeights] = useState<Record<number, number>>(() => buildEqualWeights(generateBonds(42)));
+  const [bonds, setBonds] = useState<Bond[]>([]);
+  const [rawWeights, setRawWeights] = useState<Record<number, number>>({});
   const [portfolioMarketValue, setPortfolioMarketValue] = useState<number>(50000000);
 
   const normalizedWeights = useMemo(() => normalizeWeights(rawWeights, bonds), [rawWeights, bonds]);
   const positionedBonds = useMemo(() => applyPortfolioWeights(bonds, normalizedWeights, portfolioMarketValue), [bonds, normalizedWeights, portfolioMarketValue]);
   const summary = useMemo(() => calculatePortfolioSummary(positionedBonds), [positionedBonds]);
+
+  useEffect(() => {
+    const loadBonds = async () => {
+      const seeded = generateBonds(42);
+      try {
+        const resp = await fetch("/api/insurance-metrics", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bonds: seeded }),
+        });
+        if (!resp.ok) {
+          setBonds(seeded);
+          return;
+        }
+        const data = await resp.json();
+        setBonds(Array.isArray(data?.bonds) && data.bonds.length > 0 ? data.bonds : seeded);
+      } catch {
+        setBonds(seeded);
+      }
+    };
+    loadBonds();
+  }, []);
+
+  useEffect(() => {
+    if (bonds.length === 0) return;
+    if (Object.keys(rawWeights).length === 0) {
+      setRawWeights(buildEqualWeights(bonds));
+    }
+  }, [bonds, rawWeights]);
 
   useEffect(() => {
     const loadPortfolio = async () => {

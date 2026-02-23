@@ -22,6 +22,7 @@ Repository: `https://github.com/christiantcurran-collab/cc`
 - Lightweight retrieval pipeline over preprocessed FCA content
 - Supabase-backed `community_questions` storage for community tab
 - Supabase-backed `insurance_demo_portfolios` storage for insurance holdings and rebalances
+- Python-backed fixed income analytics endpoint for insurance bond duration/convexity metrics
 
 ## Tech stack
 
@@ -62,6 +63,10 @@ npm run dev
 
 - `http://localhost:3000/how-ai-works`
 
+Prerequisite for insurance analytics:
+
+- Python 3 available in PATH as `python` (used by `/api/insurance-metrics`)
+
 ## Available scripts
 
 - `npm run dev`: start dev server
@@ -85,6 +90,7 @@ npm run dev
 - `GET|POST /api/community`: community question list + creation
 - `POST /api/community/expand`: expand community question with model answer
 - `GET|PUT /api/insurance-portfolio`: load/save insurance demo holdings for `Insurance Company A`
+- `POST /api/insurance-metrics`: Python-backed duration/convexity and cashflow calculation for insurance bonds
 - `POST /api/se-trainer/feedback`: score and coach practice answers
 - `GET /api/ingest`: ingestion capability summary endpoint
 

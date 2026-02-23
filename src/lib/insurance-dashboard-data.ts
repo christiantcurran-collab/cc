@@ -395,13 +395,19 @@ function createBond(p: {
 export function calculatePortfolioSummary(bonds: Bond[]): PortfolioSummary {
   const totalMarketValue = bonds.reduce((s, b) => s + b.marketPrice, 0);
   const totalFaceValue = bonds.reduce((s, b) => s + b.faceValue, 0);
-  const weightedDuration = bonds.reduce((s, b) => s + b.duration * b.marketPrice, 0) / totalMarketValue;
-  const weightedConvexity = bonds.reduce((s, b) => s + b.convexity * b.marketPrice, 0) / totalMarketValue;
+  const weightedDuration = totalMarketValue > 0
+    ? bonds.reduce((s, b) => s + b.duration * b.marketPrice, 0) / totalMarketValue
+    : 0;
+  const weightedConvexity = totalMarketValue > 0
+    ? bonds.reduce((s, b) => s + b.convexity * b.marketPrice, 0) / totalMarketValue
+    : 0;
   const totalPV01 = bonds.reduce((s, b) => s + b.pv01, 0);
   const totalDV01 = bonds.reduce((s, b) => s + b.dv01, 0);
   const totalCR01 = bonds.reduce((s, b) => s + b.cr01, 0);
   const totalExpectedLoss = bonds.reduce((s, b) => s + b.expectedLoss, 0);
-  const averageYield = bonds.reduce((s, b) => s + b.yieldToMaturity * b.marketPrice, 0) / totalMarketValue;
+  const averageYield = totalMarketValue > 0
+    ? bonds.reduce((s, b) => s + b.yieldToMaturity * b.marketPrice, 0) / totalMarketValue
+    : 0;
 
   const sectorMap = new Map<string, { value: number; count: number }>();
   const ratingMap = new Map<string, { value: number; count: number }>();
