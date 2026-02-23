@@ -22,7 +22,7 @@ Repository: `https://github.com/christiantcurran-collab/cc`
 - Lightweight retrieval pipeline over preprocessed FCA content
 - Supabase-backed `community_questions` storage for community tab
 - Supabase-backed `insurance_demo_portfolios` storage for insurance holdings and rebalances
-- Python-backed fixed income analytics endpoint for insurance bond duration/convexity metrics
+- Python-backed fixed income analytics endpoint for insurance bond duration/convexity metrics (executed server-side in backend API route)
 
 ## Tech stack
 
@@ -43,6 +43,15 @@ Browser (Next.js pages/components)
   -> Local cached JSON data (demo mode and how-ai-works cache)
 ```
 
+## Backend Python usage
+
+Yes, Python is used in the backend.
+
+- Route: `POST /api/insurance-metrics`
+- Node route handler spawns: `scripts/python/calculate_bond_metrics.py`
+- Python computes: cashflows, market price, duration, convexity, PV01/DV01, expected loss
+- Returned metrics are then used by the Insurance dashboard UI
+
 ### Key architecture flows
 
 1. RAG Playground
@@ -58,6 +67,42 @@ Browser (Next.js pages/components)
 - Bond set is generated client-side then sent to `/api/insurance-metrics`.
 - Python script computes market price, duration, convexity, PV01/DV01, expected loss, cashflows.
 - Holdings + rebalance state is persisted via Supabase `/api/insurance-portfolio`.
+
+## Tool system diagrams
+
+### 1) Insurance Dashboard
+
+```text
+Insurance UI (Assets / Holdings / Risk / Monte Carlo)
+  -> /api/insurance-metrics (Next.js route)
+      -> Python script calculate_bond_metrics.py
+      -> returns duration/convexity/cashflow metrics
+  -> /api/insurance-portfolio (Next.js route)
+      -> Supabase table: insurance_demo_portfolios
+  -> Risk/MC charts render using weighted holdings + computed metrics
+```
+
+### 2) SE Trainer
+
+```text
+SE Trainer UI (Docs / Quiz / Practice / Community)
+  -> Practice feedback: /api/se-trainer/feedback
+      -> OpenAI API scoring + coaching response
+  -> Community list/create: /api/community
+      -> Supabase table: community_questions
+  -> Community expand: /api/community/expand
+      -> OpenAI API expanded answer
+```
+
+### 3) How an LLM Works
+
+```text
+How-AI-Works UI controls (model/temp/top_p/RAG/etc)
+  -> local cache lookup in src/data/how-ai-works-cache.json
+  -> nearest/exact match from pre-generated combinations
+  -> renders token probability bars + generated text + explanation panel
+  -> no runtime API call required for parameter exploration
+```
 
 ## Local setup
 
@@ -175,7 +220,13 @@ scripts/
 
 ## Deployment
 
-This app is deployment-ready for Vercel or any Node-compatible host.
+This app is deployment-ready for Render (or any Node-compatible host).
+
+Render notes:
+
+- Use a Web Service with Node runtime.
+- Ensure Python 3 is available in the runtime image for `/api/insurance-metrics`.
+- Configure environment variables in Render dashboard.
 
 Recommended environment setup in production:
 
