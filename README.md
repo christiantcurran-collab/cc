@@ -9,8 +9,8 @@ Repository: `https://github.com/christiantcurran-collab/cc`
 - RAG playground with configurable retrieval and generation parameters
 - "How AI Works" visual demo showing token probabilities and parameter effects
 - Solutions Engineer trainer with documentation, MCQ quiz, and practice feedback
-- Insurance dashboard demo for domain-specific AI exploration
-- API routes for query, embedding, mode detection, and community question expansion
+- Insurance dashboard demo for domain-specific AI exploration with persisted portfolio weights
+- API routes for query, embedding, mode detection, community features, and insurance portfolio persistence
 
 ## Core capabilities
 
@@ -20,6 +20,8 @@ Repository: `https://github.com/christiantcurran-collab/cc`
 - Configurable generation parameters (`model`, `temperature`, `top_p`, `max_tokens`)
 - Cached educational outputs for deterministic demos
 - Lightweight retrieval pipeline over preprocessed FCA content
+- Supabase-backed `community_questions` storage for community tab
+- Supabase-backed `insurance_demo_portfolios` storage for insurance holdings and rebalances
 
 ## Tech stack
 
@@ -46,8 +48,9 @@ cp .env.example .env.local
 3. Set environment values in `.env.local`:
 
 - `OPENAI_API_KEY`: required for live mode
-- `SUPABASE_URL`: optional, used by community features
-- `SUPABASE_ANON_KEY`: optional, used by community features
+- `NEXT_PUBLIC_SUPABASE_URL`: required for Supabase-backed features
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: required for browser-side Supabase calls (community features)
+- `SUPABASE_SERVICE_ROLE_KEY`: recommended for server-side insurance portfolio API writes
 
 4. Run development server:
 
@@ -81,8 +84,32 @@ npm run dev
 - `GET /api/mode`: returns `demo` or `live`
 - `GET|POST /api/community`: community question list + creation
 - `POST /api/community/expand`: expand community question with model answer
+- `GET|PUT /api/insurance-portfolio`: load/save insurance demo holdings for `Insurance Company A`
 - `POST /api/se-trainer/feedback`: score and coach practice answers
 - `GET /api/ingest`: ingestion capability summary endpoint
+
+## Supabase setup
+
+This project currently uses Supabase for two feature sets:
+
+- `community_questions` table: SE Trainer Community tab
+- `insurance_demo_portfolios` table: Insurance holdings and rebalance state
+
+Insurance table setup is provided:
+
+- `scripts/sql/insurance_demo_portfolio.sql`
+
+Community table can be created with:
+
+```sql
+create table if not exists public.community_questions (
+  id uuid primary key default gen_random_uuid(),
+  text text not null,
+  author text not null default 'Contributor',
+  ai_answer text null,
+  created_at timestamptz not null default now()
+);
+```
 
 ## Repository structure
 
@@ -120,8 +147,9 @@ This app is deployment-ready for Vercel or any Node-compatible host.
 Recommended environment setup in production:
 
 - `OPENAI_API_KEY`
-- `SUPABASE_URL` (if community features enabled)
-- `SUPABASE_ANON_KEY` (if community features enabled)
+- `NEXT_PUBLIC_SUPABASE_URL` (if community/insurance features enabled)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (if community features enabled)
+- `SUPABASE_SERVICE_ROLE_KEY` (recommended for insurance portfolio API writes)
 
 ## License
 
