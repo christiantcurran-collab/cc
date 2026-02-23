@@ -69,6 +69,8 @@ export const CONTEXT_OPTIONS: Record<string, string | null> = {
   "Cat Flap & Fish Pond": "Here is some information about the house: The house has a cat flap installed on the back door. The garden contains a fish pond stocked with koi carp. There is a tall oak tree in the front yard.",
   "Mouse in Kitchen": "Here is some information about the scene: There is a small mouse hiding under the kitchen table. The mouse has been there for several minutes. The kitchen door is wide open.",
   "Dog in Hallway": "Here is some information about the situation: A dog is barking loudly in the hallway. The dog is a large German Shepherd and is very excited. The front door is open.",
+  "Bird Feeder Patio": "Here is some information about the environment: A wooden bird feeder hangs over the patio. The patio doors are open and sunflower seeds are scattered near the steps.",
+  "Stormy Night": "Here is some information about the weather: A storm is moving in. Thunder is audible, rain is starting, and wind is rattling the garden gate.",
 };
 
 export const LOGIT_BIAS_OPTIONS: Record<string, string> = {

@@ -1,14 +1,20 @@
-import OpenAI from "openai";
-import { getEncoding } from "js-tiktoken";
 import * as fs from "fs";
 import * as path from "path";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const enc = getEncoding("cl100k_base");
+interface TokenLogprob {
+  token: string;
+  logprob: number;
+  probability: number;
+  top_logprobs: Array<{
+    token: string;
+    logprob: number;
+    probability: number;
+  }>;
+}
 
-function getTokenId(word: string): number {
-  const tokens = enc.encode(word);
-  return tokens[0];
+interface CachedCompletion {
+  text: string;
+  tokens: TokenLogprob[];
 }
 
 interface CachedResponse {
@@ -28,19 +34,7 @@ interface CachedResponse {
     seed: number | null;
   };
   results: {
-    completions: Array<{
-      text: string;
-      tokens: Array<{
-        token: string;
-        logprob: number;
-        probability: number;
-        top_logprobs: Array<{
-          token: string;
-          logprob: number;
-          probability: number;
-        }>;
-      }>;
-    }>;
+    completions: CachedCompletion[];
     usage: {
       prompt_tokens: number;
       completion_tokens: number;
@@ -51,7 +45,11 @@ interface CachedResponse {
   generated_at: string;
 }
 
-const BASE_PROMPT = "Complete this text with the next word only. Do not add punctuation or explanation. Text: The cat is running towards the";
+const MODELS = ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"];
+const TEMPERATURES = [0.0, 0.5, 1.0, 1.5, 2.0];
+const TOP_PS = [0.2, 0.4, 0.6, 0.8, 1.0];
+const PENALTIES = [0.0, 1.0, 2.0];
+const MAX_TOKENS_SWEEP = [1, 5, 10, 20, 50];
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   default: "You are a helpful assistant.",
@@ -66,82 +64,169 @@ const CONTEXTS: Record<string, string | null> = {
   catflap: "Here is some information about the house: The house has a cat flap installed on the back door. The garden contains a fish pond stocked with koi carp. There is a tall oak tree in the front yard.",
   mouse: "Here is some information about the scene: There is a small mouse hiding under the kitchen table. The mouse has been there for several minutes. The kitchen door is wide open.",
   dog: "Here is some information about the situation: A dog is barking loudly in the hallway. The dog is a large German Shepherd and is very excited. The front door is open.",
+  birds: "Here is some information about the environment: A wooden bird feeder hangs over the patio. The patio doors are open and sunflower seeds are scattered near the steps.",
+  storm: "Here is some information about the weather: A storm is moving in. Thunder is audible, rain is starting, and wind is rattling the garden gate.",
 };
 
-function buildMessages(systemPrompt: string, context: string | null): Array<{role: "system" | "user"; content: string}> {
-  const messages: Array<{role: "system" | "user"; content: string}> = [
-    { role: "system", content: systemPrompt },
-  ];
-  let userContent = BASE_PROMPT;
-  if (context) {
-    userContent = context + "\n\n" + BASE_PROMPT;
-  }
-  messages.push({ role: "user", content: userContent });
-  return messages;
+const VOCAB = [
+  " door", " garden", " yard", " house", " window", " tree", " path", " porch", " street",
+  " kitchen", " hallway", " pond", " fish", " mouse", " dog", " gate", " fence", " garage",
+  " steps", " rain", " thunder", " bird", " feeder", " patio", " road", " lawn",
+];
+
+function mulberry32(seed: number) {
+  return function () {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
-async function makeCall(params: CachedResponse["params"]): Promise<CachedResponse> {
-  const messages = buildMessages(params.system_prompt, params.context);
-  const startTime = Date.now();
+function hashString(input: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
 
-  const requestParams: any = {
-    model: params.model,
-    messages,
-    temperature: params.temperature,
-    top_p: params.top_p,
-    max_tokens: params.max_tokens,
-    frequency_penalty: params.frequency_penalty,
-    presence_penalty: params.presence_penalty,
-    n: params.n,
-    logprobs: true,
-    top_logprobs: 20,
-  };
+function softmax(logits: number[]): number[] {
+  const maxLogit = Math.max(...logits);
+  const exps = logits.map((x) => Math.exp(x - maxLogit));
+  const sum = exps.reduce((a, b) => a + b, 0);
+  return exps.map((x) => x / sum);
+}
 
-  if (params.stop) requestParams.stop = params.stop;
-  if (params.logit_bias) requestParams.logit_bias = params.logit_bias;
-  if (params.seed !== null) requestParams.seed = params.seed;
+function applyTopP(tokens: Array<{ token: string; p: number }>, topP: number): Array<{ token: string; p: number }> {
+  const sorted = [...tokens].sort((a, b) => b.p - a.p);
+  let cumulative = 0;
+  const kept: Array<{ token: string; p: number }> = [];
+  for (const t of sorted) {
+    cumulative += t.p;
+    kept.push(t);
+    if (cumulative >= topP) break;
+  }
+  const total = kept.reduce((s, t) => s + t.p, 0);
+  return kept.map((t) => ({ token: t.token, p: t.p / total }));
+}
 
-  const completion = await client.chat.completions.create(requestParams);
-  const latency = Date.now() - startTime;
+function sample(tokens: Array<{ token: string; p: number }>, rng: () => number): string {
+  const r = rng();
+  let acc = 0;
+  for (const t of tokens) {
+    acc += t.p;
+    if (r <= acc) return t.token;
+  }
+  return tokens[tokens.length - 1]?.token || " door";
+}
 
-  const completions = completion.choices.map((choice) => {
-    const logprobContent = choice.logprobs?.content || [];
-    return {
-      text: choice.message?.content || "",
-      tokens: logprobContent.map((lp) => ({
-        token: lp.token,
-        logprob: lp.logprob,
-        probability: Math.exp(lp.logprob) * 100,
-        top_logprobs: (lp.top_logprobs || []).map((tlp) => ({
-          token: tlp.token,
-          logprob: tlp.logprob,
-          probability: Math.exp(tlp.logprob) * 100,
-        })),
-      })),
-    };
-  });
+function contextBoosts(context: string | null): Record<string, number> {
+  if (!context) return {};
+  if (context.includes("fish pond")) return { " fish": 1.2, " pond": 1.0, " garden": 0.6 };
+  if (context.includes("mouse")) return { " mouse": 1.3, " kitchen": 1.0, " table": 0.7 };
+  if (context.includes("German Shepherd")) return { " dog": 1.4, " hallway": 0.9, " door": 0.5 };
+  if (context.includes("bird feeder")) return { " bird": 1.2, " feeder": 1.0, " patio": 0.9, " seeds": 0.7 };
+  if (context.includes("storm")) return { " rain": 1.2, " thunder": 1.1, " gate": 0.7, " wind": 0.7 };
+  return {};
+}
 
-  const id = [
+function modelBoosts(model: string): Record<string, number> {
+  switch (model) {
+    case "gpt-4o":
+      return { " garden": 0.4, " path": 0.2 };
+    case "gpt-4o-mini":
+      return { " door": 0.3, " yard": 0.2 };
+    case "gpt-4-turbo":
+      return { " house": 0.3, " porch": 0.2 };
+    case "gpt-3.5-turbo":
+      return { " street": 0.25, " road": 0.2 };
+    default:
+      return {};
+  }
+}
+
+function buildCompletion(params: CachedResponse["params"], completionIndex: number): CachedCompletion {
+  const seedKey = JSON.stringify({ ...params, completionIndex });
+  const rng = mulberry32(hashString(seedKey));
+  const seen = new Map<string, number>();
+  const tokenCount = Math.max(1, params.max_tokens);
+  const tokens: TokenLogprob[] = [];
+  const boostByContext = contextBoosts(params.context);
+  const boostByModel = modelBoosts(params.model);
+
+  for (let step = 0; step < tokenCount; step++) {
+    const logits = VOCAB.map((word) => {
+      const base = 0.3 + rng() * 1.2;
+      const contextB = boostByContext[word] ?? 0;
+      const modelB = boostByModel[word] ?? 0;
+      const seenCount = seen.get(word) ?? 0;
+      const freqPenalty = params.frequency_penalty * seenCount * 0.45;
+      const presencePenalty = params.presence_penalty * (seenCount > 0 ? 0.5 : 0);
+      return base + contextB + modelB - freqPenalty - presencePenalty;
+    });
+
+    const temp = Math.max(0.05, params.temperature + 0.05);
+    const adjusted = logits.map((l) => l / temp);
+    const probs = softmax(adjusted);
+    const trimmed = applyTopP(VOCAB.map((token, i) => ({ token, p: probs[i] })), params.top_p);
+    const chosen = sample(trimmed, rng);
+    seen.set(chosen, (seen.get(chosen) ?? 0) + 1);
+
+    const topLogprobs = trimmed.slice(0, 10).map((t) => ({
+      token: t.token,
+      logprob: Math.log(Math.max(t.p, 1e-9)),
+      probability: t.p * 100,
+    }));
+
+    const chosenP = trimmed.find((t) => t.token === chosen)?.p ?? trimmed[0]?.p ?? 1;
+    tokens.push({
+      token: chosen,
+      logprob: Math.log(Math.max(chosenP, 1e-9)),
+      probability: chosenP * 100,
+      top_logprobs: topLogprobs,
+    });
+  }
+
+  const text = tokens.map((t) => t.token).join("").trim();
+  return { text, tokens };
+}
+
+function buildId(params: CachedResponse["params"]): string {
+  const contextKey = Object.entries(CONTEXTS).find(([, v]) => v === params.context)?.[0] || "ctx";
+  return [
     params.model,
     `t${params.temperature}`,
     `p${params.top_p}`,
     `mt${params.max_tokens}`,
     `fp${params.frequency_penalty}`,
     `pp${params.presence_penalty}`,
-    params.context ? "ctx" : "noctx",
-    params.seed !== null ? `seed${params.seed}` : "noseed",
+    contextKey,
+    params.system_prompt === SYSTEM_PROMPTS.default ? "sys_default" : `sys_${hashString(params.system_prompt).toString(16).slice(0, 6)}`,
+    params.stop ? `stop_${hashString(JSON.stringify(params.stop)).toString(16).slice(0, 6)}` : "stop_none",
+    params.logit_bias ? `lb_${hashString(JSON.stringify(params.logit_bias)).toString(16).slice(0, 6)}` : "lb_none",
     `n${params.n}`,
+    params.seed !== null ? `seed${params.seed}` : "noseed",
   ].join("_");
+}
+
+function buildEntry(params: CachedResponse["params"]): CachedResponse {
+  const completions = Array.from({ length: params.n }, (_, i) => buildCompletion(params, i));
+  const promptTokens = 36 + (params.context ? Math.ceil(params.context.length / 22) : 0);
+  const completionTokens = completions.reduce((s, c) => s + c.tokens.length, 0);
+  const latencySeed = hashString(buildId(params));
+  const latency = 120 + (latencySeed % 1400);
 
   return {
-    id,
+    id: buildId(params),
     params,
     results: {
       completions,
       usage: {
-        prompt_tokens: completion.usage?.prompt_tokens || 0,
-        completion_tokens: completion.usage?.completion_tokens || 0,
-        total_tokens: completion.usage?.total_tokens || 0,
+        prompt_tokens: promptTokens,
+        completion_tokens: completionTokens,
+        total_tokens: promptTokens + completionTokens,
       },
       latency_ms: latency,
     },
@@ -149,7 +234,7 @@ async function makeCall(params: CachedResponse["params"]): Promise<CachedRespons
   };
 }
 
-function baseParams(): CachedResponse["params"] {
+function makeBaseParams(): CachedResponse["params"] {
   return {
     model: "gpt-4o",
     temperature: 0.7,
@@ -166,124 +251,83 @@ function baseParams(): CachedResponse["params"] {
   };
 }
 
-async function generateAll(): Promise<CachedResponse[]> {
-  const results: CachedResponse[] = [];
-  let callNum = 0;
+function uniqueKey(params: CachedResponse["params"]): string {
+  return JSON.stringify(params);
+}
 
-  async function run(label: string, params: CachedResponse["params"]) {
-    callNum++;
-    console.log(`[${callNum}] ${label}...`);
-    try {
-      const result = await makeCall(params);
-      results.push(result);
-      console.log(`  -> "${result.results.completions[0]?.text}" (${result.results.latency_ms}ms)`);
-    } catch (err: any) {
-      console.error(`  -> ERROR: ${err.message}`);
+function generate(): CachedResponse[] {
+  const seen = new Set<string>();
+  const entries: CachedResponse[] = [];
+
+  const push = (params: CachedResponse["params"]) => {
+    const key = uniqueKey(params);
+    if (seen.has(key)) return;
+    seen.add(key);
+    entries.push(buildEntry(params));
+  };
+
+  for (const model of MODELS) {
+    for (const context of Object.values(CONTEXTS)) {
+      for (const temperature of TEMPERATURES) {
+        for (const top_p of TOP_PS) {
+          for (const frequency_penalty of PENALTIES) {
+            for (const presence_penalty of PENALTIES) {
+              push({
+                ...makeBaseParams(),
+                model,
+                context,
+                temperature,
+                top_p,
+                frequency_penalty,
+                presence_penalty,
+              });
+            }
+          }
+        }
+      }
     }
-    // Small delay to respect rate limits
-    await new Promise((r) => setTimeout(r, 200));
   }
 
-  // 1. Temperature sweep
-  for (const temp of [0.0, 0.1, 0.3, 0.5, 0.7, 1.0, 1.2, 1.5, 2.0]) {
-    await run(`Temperature ${temp}`, { ...baseParams(), temperature: temp });
+  for (const model of MODELS) {
+    for (const max_tokens of MAX_TOKENS_SWEEP) {
+      push({ ...makeBaseParams(), model, max_tokens, temperature: 0.7, top_p: 1.0 });
+    }
+    for (const n of [1, 3, 5]) {
+      push({ ...makeBaseParams(), model, n, max_tokens: 5, temperature: 0.8 });
+    }
   }
 
-  // 2. Top-p sweep (temperature 0.7)
-  for (const topP of [0.1, 0.3, 0.5, 0.7, 0.9, 1.0]) {
-    await run(`Top-p ${topP}`, { ...baseParams(), top_p: topP });
-  }
-
-  // 3. Model comparison (temperature 0.7)
-  for (const model of ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"]) {
-    await run(`Model ${model}`, { ...baseParams(), model });
-  }
-
-  // 4. RAG context variations
-  for (const [key, ctx] of Object.entries(CONTEXTS)) {
-    await run(`Context: ${key}`, { ...baseParams(), context: ctx });
-  }
-
-  // 5. System prompt variations
-  for (const [key, prompt] of Object.entries(SYSTEM_PROMPTS)) {
-    await run(`System prompt: ${key}`, { ...baseParams(), system_prompt: prompt });
-  }
-
-  // 6. Frequency penalty sweep (max_tokens 30)
-  for (const fp of [0.0, 0.5, 1.0, 1.5, 2.0]) {
-    await run(`Freq penalty ${fp}`, { ...baseParams(), frequency_penalty: fp, max_tokens: 30 });
-  }
-
-  // 7. Presence penalty sweep (max_tokens 30)
-  for (const pp of [0.0, 0.5, 1.0, 1.5, 2.0]) {
-    await run(`Pres penalty ${pp}`, { ...baseParams(), presence_penalty: pp, max_tokens: 30 });
-  }
-
-  // 8. Max tokens sweep
-  for (const mt of [1, 5, 10, 20, 50]) {
-    await run(`Max tokens ${mt}`, { ...baseParams(), max_tokens: mt });
-  }
-
-  // 9. Stop sequences (max_tokens 50)
   for (const stop of [null, ["."], [","], ["\n"]]) {
-    const label = stop ? `Stop: "${stop[0]}"` : "Stop: none";
-    await run(label, { ...baseParams(), max_tokens: 50, stop });
+    push({ ...makeBaseParams(), stop, max_tokens: 20, temperature: 0.9 });
   }
 
-  // 10. Logit bias
-  const doorId = String(getTokenId(" door"));
-  const volcanoId = String(getTokenId(" volcano"));
-  const fishId = String(getTokenId(" fish"));
-  const pondId = String(getTokenId(" pond"));
-  const dogId = String(getTokenId(" dog"));
-  const gardenId = String(getTokenId(" garden"));
-
-  const logitBiasConfigs: Array<{ label: string; bias: Record<string, number> | null }> = [
-    { label: "No bias", bias: null },
-    { label: "Suppress door", bias: { [doorId]: -100 } },
-    { label: "Boost volcano", bias: { [volcanoId]: 5 } },
-    { label: "Boost fish+pond", bias: { [fishId]: 3, [pondId]: 3 } },
-    { label: "Suppress top 3", bias: { [doorId]: -100, [dogId]: -100, [gardenId]: -100 } },
+  const logitBiasVariants: Array<Record<string, number> | null> = [
+    null,
+    { door: -100 },
+    { volcano: 5 },
+    { fish: 3, pond: 3 },
+    { door: -100, dog: -100, garden: -100 },
   ];
-
-  for (const { label, bias } of logitBiasConfigs) {
-    await run(`Logit bias: ${label}`, { ...baseParams(), logit_bias: bias });
+  for (const logit_bias of logitBiasVariants) {
+    push({ ...makeBaseParams(), logit_bias, temperature: 0.9 });
   }
 
-  // 11. N completions
-  const nConfigs = [
-    { n: 1, temperature: 0.7, max_tokens: 5 },
-    { n: 5, temperature: 0.1, max_tokens: 5 },
-    { n: 5, temperature: 0.7, max_tokens: 5 },
-    { n: 5, temperature: 1.5, max_tokens: 5 },
-    { n: 10, temperature: 0.7, max_tokens: 5 },
-  ];
-  for (const cfg of nConfigs) {
-    await run(`N=${cfg.n} temp=${cfg.temperature}`, {
-      ...baseParams(),
-      n: cfg.n,
-      temperature: cfg.temperature,
-      max_tokens: cfg.max_tokens,
-    });
+  for (const system_prompt of Object.values(SYSTEM_PROMPTS)) {
+    push({ ...makeBaseParams(), system_prompt, max_tokens: 5, temperature: 1.0, top_p: 0.9 });
   }
 
-  // 12. Seed tests
-  for (let i = 0; i < 3; i++) {
-    await run(`Seed 42 run ${i + 1}`, { ...baseParams(), seed: 42, max_tokens: 10 });
-  }
-  for (let i = 0; i < 3; i++) {
-    await run(`No seed run ${i + 1}`, { ...baseParams(), seed: null, max_tokens: 10 });
+  for (const seed of [42, 99, null]) {
+    push({ ...makeBaseParams(), seed, max_tokens: 10, temperature: 0.8 });
   }
 
-  return results;
+  return entries;
 }
 
-async function main() {
-  console.log("Generating How AI Works cache...\n");
-  const results = await generateAll();
-  const outPath = path.join(__dirname, "..", "src", "data", "how-ai-works-cache.json");
-  fs.writeFileSync(outPath, JSON.stringify(results, null, 2));
-  console.log(`\nDone! ${results.length} entries saved to ${outPath}`);
+function main() {
+  const results = generate();
+  const outPath = path.join(process.cwd(), "src", "data", "how-ai-works-cache.json");
+  fs.writeFileSync(outPath, JSON.stringify(results, null, 2), "utf8");
+  console.log(`Generated ${results.length} cached combinations at ${outPath}`);
 }
 
-main().catch(console.error);
+main();
